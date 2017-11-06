@@ -1,0 +1,238 @@
+---
+title: "HW2_wenting_xu"
+output: pdf_document
+---
+# Q1
+## a.
+Suppose ith dimension has $$L{i}$$ levels, the total number of cuboid is
+$$\prod{(L{i} + 1)}$$
+There are 10 dimensions with no hierarchy, so the number of cuboids are
+```{r}
+2^10
+```
+```{r}'
+1024 cuboids are there in the full data cube
+```
+## b.
+First, we consider at least one of the first three elements is not aggregated.
+```{r}
+(2^3 - 1)*2^7
+```
+There are 3 base cell.
+```{r}
+3 * 896
+```
+
+Then we consider that if the first three dimensions are all aggregated
+
+```{r}
+2^7
+```
+
+Since there are 3 base cells. So the number of cell is
+
+```{r}
+2688 + 128 - 3
+```
+
+```{r}'
+The complete cube will contain 2813 distinct aggregated (i.e., non-base) cells.
+```
+## c.
+when count > 2, it means we only consider the last 7 dimensions.
+
+```{r}
+2^7
+```
+
+```{r}'
+An iceberg cube will contain 128 distinct aggregated cells, if the condition of the iceberg cube is count > 2.
+```
+## c.
+only the last 7 dimensions can be counted 3
+```{r}'
+The closed cell with count = 3  has 7 non-star dimensions.
+```
+
+
+#Q2
+
+##a 
+Suppose ith dimension has $$L{i}$$ levels, the total number of cuboid is
+$$\prod{(L{i} + 1)}$$
+```{r}
+3*2*2*2
+```
+
+##b
+
+```{r}
+data = read.csv("Q2data.csv",header = FALSE)
+name = c("id","state","city","category","price","rating")
+colnames(data) = name
+```
+
+```{r}
+## sort
+data = data[order(data[,3],data[,4],data[,5],data[,6]),]
+```
+
+```{r}
+library(plyr)
+nrow(count(data,vars = c("city","category","price","rating")))
+```
+```{r}'
+There are 48 cells in the cuboid (Location(city), Category, Rating, Price).
+```
+## c
+```{r}
+nrow(count(data,vars = c("state","category","price","rating")))
+```
+
+```{r}'
+There are 34 cells in the cuboid (Location(State), Category, Rating, Price).
+```
+## d
+
+```{r}
+nrow(count(data,vars = c("category","price","rating")))
+```
+
+```{r}'
+There are 23 cells in the cuboid (* , Category , Rating , Price).
+```
+
+## e
+
+```{r}
+sum(data$state == "Illinois" & data$rating == 3 & data$price == "moderate")
+```
+
+```{r}'
+The count for the cell (Location(state) = ’Illinois’ , * , rating = 3 , Price = ’Moderate’) is 2.
+```
+## f
+
+```{r}
+sum(data$city == "Chicago" & data$category == "food")
+```
+
+```{r}'
+The count for the cell (Location(city) = ’Chicago’ , Category=’food’ , * , *) is 2
+```
+
+# Q3
+
+## a. support = 20
+
+### 1.
+```{r echo = FALSE, eval = FALSE}
+install.packages("arules")
+```
+
+```{r}
+library("arules")
+tr = read.transactions("Q3data",format="basket",sep=" ")
+```
+
+```{r}
+frequentItems = eclat (tr, parameter = list(supp = 0.2))
+```
+
+
+```{r}
+length(frequentItems)
+```
+
+```{r}‘
+The number of frequent patterns is 30
+```
+
+### 2.
+
+```{r}
+frequentItems <- eclat (tr, parameter = list(supp = 0.2,maxlen = 3, minlen = 3))
+length(frequentItems)
+```
+
+```{r}’
+The number of frequent patterns with length 3 is 8
+```
+
+###3
+```{r}
+rules <- apriori(tr, 
+                 parameter = list(supp = 0.2, target = "rules"))
+maximal = is.maximal(rules)
+length(rules[maximal])
+```
+
+```{r}'
+The number of max patterns is 7
+```
+
+## b. support = 10
+### 1
+```{r}
+frequentItems_10 = eclat (tr, parameter = list(supp = 0.1))
+length(frequentItems_10)
+```
+```{r}'
+The number of frequent pattern is 55.
+```
+
+
+### 2
+
+```{r}
+frequentItems_10_3 = eclat (tr, parameter = list(supp = 0.1,maxlen = 3, minlen = 3))
+length(frequentItems_10_3)
+```
+```{r}'
+The number of frequent patterns with length 3 is 20
+```
+
+
+### 3
+
+```{r}'
+Calculate the number of maximal patterns
+```
+
+
+```{r}
+maximal = is.maximal(frequentItems_10)
+length(frequentItems_10[maximal])
+```
+###4
+```{r}
+frequentItems = apriori(tr, parameter = list(supp = 0.1,conf = 0,maxlen = 3,minlen = 3))
+```
+
+
+```{r}
+round(quality(frequentItems[60])$confidence,3)
+```
+According to the formula:
+$$P(A|C\cap E) = \frac{P(A\cap C\cap E)}{P(C\cap E))}$$
+
+```{r}'
+the confidence measure of the association rule (C, E) -> A is 0.679
+```
+
+###5
+```{r}
+frequentItems = apriori (tr, parameter = list(supp = 0.1,conf = 0,maxlen = 4, minlen = 4))
+```
+
+```{r}
+round(quality(frequentItems[34])$confidence,3)
+```
+According to the formula:
+$$P(E|A\cap B\cap C) = \frac{P(A\cap B\cap C\cap E)}{P(A\cap B\cap C))}$$
+
+```{r}‘
+the confidence measure of the association rule (A, B, C) -> E is 0.742
+```
+
+
